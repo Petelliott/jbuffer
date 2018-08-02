@@ -16,34 +16,41 @@
 (in-package :rope)
 
 
+(defstruct rope
+  nl   ; length of left branch
+  nnl  ; lines in left branch
+  l    ; left branch
+  r)   ; right branch
+
+
 (defun print-rope (rope)
   "prints a rope via princ"
   (if (stringp rope)
     (princ rope)
     (progn
-      (print-rope (second rope))
-      (print-rope (third rope)))))
+      (print-rope (rope-l rope))
+      (print-rope (rope-r rope)))))
 
 
 (defun rope-ref (rope i)
   "gets the char in the rope at index i"
   (cond
     ((stringp rope) (aref rope i))
-    ((< i (first rope)) (rope-ref (second rope) i))
-    (t (rope-ref (third rope) (- i (first rope))))))
+    ((< i (rope-nl rope)) (rope-ref (rope-l rope) i))
+    (t (rope-ref (rope-r rope) (- i (rope-nl rope))))))
 
 
 (defun split (rope i)
   "splits a rope at i into a list of two ropes"
   (cond
     ((stringp rope) (split-str rope i))
-    ((= i (first rope)) (list (second rope) (third rope)))
-    ((< i (first rope))
-     (let ((left (split (second rope) i)))
-       (list (first left) (concat (second left) (third rope)))))
-    ((> i (first rope))
-     (let ((right (split (third rope) (- i (first rope)))))
-       (list (concat (second rope) (first right)) (second right))))))
+    ((= i (rope-nl rope)) (list (rope-l rope) (rope-r rope)))
+    ((< i (rope-nl rope))
+     (let ((left (split (rope-l rope) i)))
+       (list (first left) (concat (second left) (rope-r rope)))))
+    ((> i (rope-nl rope))
+     (let ((right (split (rope-r rope) (- i (rope-nl rope)))))
+       (list (concat (rope-l rope) (first right)) (second right))))))
 
 
 (defun split-str (str i)
@@ -56,8 +63,8 @@
   (if (stringp rope)
     (length rope)
     (+
-      (first rope)
-      (rope-len (third rope)))))
+      (rope-nl rope)
+      (rope-len (rope-r rope)))))
 
 
 (defun concat (rope1 rope2)
@@ -65,7 +72,9 @@
   (cond
     ((equal rope1 "") rope2)
     ((equal rope2 "") rope1)
-    (t (list (rope-len rope1) rope1 rope2))))
+    (t (make-rope :nl (rope-len rope1)
+                  :l rope1
+                  :r rope2))))
 
 
 (defun insert (rope str i)
