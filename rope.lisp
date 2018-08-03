@@ -25,7 +25,7 @@
 
 (defun print-rope (rope)
   "prints a rope via princ"
-  (if (stringp rope)
+  (if (typep rope 'sequence)
     (princ rope)
     (progn
       (print-rope (rope-l rope))
@@ -35,7 +35,7 @@
 (defun rope-ref (rope i)
   "gets the char in the rope at index i"
   (cond
-    ((stringp rope) (aref rope i))
+    ((typep rope 'sequence) (aref rope i))
     ((< i (rope-nl rope)) (rope-ref (rope-l rope) i))
     (t (rope-ref (rope-r rope) (- i (rope-nl rope))))))
 
@@ -43,7 +43,7 @@
 (defun split (rope i)
   "splits a rope at i into a list of two ropes"
   (cond
-    ((stringp rope) (split-str rope i))
+    ((typep rope 'sequence) (split-str rope i))
     ((= i (rope-nl rope)) (list (rope-l rope) (rope-r rope)))
     ((< i (rope-nl rope))
      (let ((left (split (rope-l rope) i)))
@@ -60,7 +60,7 @@
 
 (defun rope-len (rope)
   "gets the length of the rope"
-  (if (stringp rope)
+  (if (typep rope 'sequence)
     (length rope)
     (+
       (rope-nl rope)
