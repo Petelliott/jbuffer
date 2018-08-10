@@ -11,16 +11,20 @@
     #:rope-len
     #:concat
     #:insert
-    #:del-from))
+    #:del-from
+    #:chunks))
 
 (in-package :rope)
 
 
 (defstruct rope
   nl   ; length of left branch
-  nnl  ; lines in left branch
+  nnl  ; lines in left branch (currently unused)
   l    ; left branch
   r)   ; right branch
+
+
+;; TODO: change sequence checks to ropep checks
 
 
 (defun print-rope (rope)
@@ -89,3 +93,12 @@
   (concat
     (first (split rope start))
     (second (split rope end))))
+
+
+(defun chunks (rope)
+  "linearizes the rope into a list"
+  (if (rope-p rope)
+    (append
+      (chunks (rope-l rope))
+      (chunks (rope-r rope)))
+    (list rope)))
