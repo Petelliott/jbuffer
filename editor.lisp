@@ -7,7 +7,8 @@
     #:insert
     #:del-from
     #:undo
-    #:redo))
+    #:redo
+    #:buffer))
 
 
 (in-package :editor)
