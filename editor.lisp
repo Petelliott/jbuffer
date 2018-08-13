@@ -16,6 +16,7 @@
 (defstruct buffer
   stack  ; the stack of buffer snapshots (terminated when car is not list)
   redo   ; the stack of undone snapshots
+  dirty  ; whether or not the buffer has been updated
   fname) ; the file the buffer is associated with
 
 
@@ -37,6 +38,7 @@
   (make-buffer
     :stack (fname-to-istring fname)
     :redo nil
+    :dirty nil
     :fname fname))
 
 
@@ -50,7 +52,13 @@
     (mapcar
       (lambda (chunk)
         (princ chunk f))
-      (rope:chunks (buffer-head buff)))))
+      (rope:chunks (buffer-head buff))))
+
+  (make-buffer
+    :stack (buffer-stack buff)
+    :redo  (buffer-redo buff)
+    :dirty nil
+    :fname (buffer-fname buff)))
 
 
 (defun insert (buff str i)
@@ -59,6 +67,7 @@
              (rope:insert (buffer-head buff) str i)
              (buffer-stack buff))
     :redo nil
+    :dirty t
     :fname (buffer-fname buff)))
 
 
@@ -68,6 +77,7 @@
              (rope:del-from (buffer-head buff) start end)
              (buffer-stack buff))
     :redo nil
+    :dirty t
     :fname (buffer-fname buff)))
 
 
@@ -78,6 +88,7 @@
       :redo  (cons
                (car (buffer-stack buff))
                (buffer-redo buff))
+      :dirty t  ;TODO: attach dirtyness to snapshot
       :fname (buffer-fname buff))
     buff))
 
@@ -89,5 +100,6 @@
                (car (buffer-redo buff))
                (buffer-stack buff))
       :redo  (cdr (buffer-redo buff))
+      :dirty t ;TODO: attatch dirtyness to snapshot
       :fname (buffer-fname buff))
     buff))
