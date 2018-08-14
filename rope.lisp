@@ -5,13 +5,11 @@
 (defpackage :rope
   (:use :cl)
   (:export
-    #:find-lines
-    #:bsearch
-    #:split-leaf
-
     #:str-to-rope
     #:print-rope
+    #:coord-to-idx
     #:rope-ref
+    #:line-ref
     #:split
     #:rope-len
     #:rope-lines
@@ -63,12 +61,30 @@
       (print-rope (rope-r rope)))))
 
 
+(defun coord-to-idx (rope lines &optional (cols 0))
+  "turns a lines/cols index into a linear one"
+  (min
+    (+ (line-ref rope lines) cols)
+    (1- (line-ref rope (+ lines 1)))))
+
+
 (defun rope-ref (rope i)
   "gets the char in the rope at index i"
   (cond
     ((leaf-p rope) (aref (leaf-str rope) i))
     ((< i (rope-nl rope)) (rope-ref (rope-l rope) i))
     (t (rope-ref (rope-r rope) (- i (rope-nl rope))))))
+
+
+(defun line-ref (rope i)
+  "gets the index of the line at i"
+  (cond
+    ((leaf-p rope)
+     (if (< i (length (leaf-lvec rope)))
+       (aref (leaf-lvec rope) i)
+       (rope-len rope)))
+    ((< i (rope-nnl rope)) (line-ref (rope-l rope) i))
+    (t (line-ref (rope-r rope) (- i (rope-nnl rope))))))
 
 
 (defun split (rope i)
