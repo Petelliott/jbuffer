@@ -5,10 +5,16 @@
 (defpackage :rope
   (:use :cl)
   (:export
+    #:find-lines
+    #:bsearch
+    #:split-leaf
+
+    #:str-to-rope
     #:print-rope
     #:rope-ref
     #:split
     #:rope-len
+    #:rope-lines
     #:concat
     #:insert
     #:del-from
@@ -17,20 +23,41 @@
 (in-package :rope)
 
 
+(defstruct leaf
+  str   ; the sequence the leaf is based on
+  lvec) ; the vector of newlines
+
+
+(defun find-lines (str)
+  (coerce (find-lines-list str) 'vector))
+
+
+(defun find-lines-list (str &optional (i -1))
+  (cond
+    ((= i (- (length str) 1)) nil)
+    ((= i -1) (cons 0 (find-lines-list str (+ i 1))))
+    ((equal (elt str i) #\newline)
+       (cons (+ i 1) (find-lines-list str (+ i 1))))
+    (t (find-lines-list str (+ i 1)))))
+
+
 (defstruct rope
   nl   ; length of left branch
-  nnl  ; lines in left branch (currently unused)
+  nnl  ; number of newlines in left branch
   l    ; left branch
   r)   ; right branch
 
 
-;; TODO: change sequence checks to ropep checks
+(defun str-to-rope (str)
+  (make-leaf
+    :str (istring:make-istring str)
+    :lvec (find-lines str)))
 
 
 (defun print-rope (rope)
   "prints a rope via princ"
-  (if (typep rope 'sequence)
-    (princ rope)
+  (if (leaf-p rope)
+    (princ (leaf-str rope))
     (progn
       (print-rope (rope-l rope))
       (print-rope (rope-r rope)))))
@@ -39,7 +66,7 @@
 (defun rope-ref (rope i)
   "gets the char in the rope at index i"
   (cond
-    ((typep rope 'sequence) (aref rope i))
+    ((leaf-p rope) (aref (leaf-str rope) i))
     ((< i (rope-nl rope)) (rope-ref (rope-l rope) i))
     (t (rope-ref (rope-r rope) (- i (rope-nl rope))))))
 
@@ -47,7 +74,7 @@
 (defun split (rope i)
   "splits a rope at i into a list of two ropes"
   (cond
-    ((typep rope 'sequence) (split-str rope i))
+    ((leaf-p rope) (split-leaf rope i))
     ((= i (rope-nl rope)) (list (rope-l rope) (rope-r rope)))
     ((< i (rope-nl rope))
      (let ((left (split (rope-l rope) i)))
@@ -57,26 +84,67 @@
        (list (concat (rope-l rope) (first right)) (second right))))))
 
 
-(defun split-str (str i)
+(defun split-leaf (leaf i)
   "splits a string in to two strings at i"
-  (list (subseq str 0 i) (subseq str i)))
+  (let ((nl-split (bsearch (leaf-lvec leaf) i)))
+    (list
+      (make-leaf
+        :str (subseq (leaf-str leaf) 0 i)
+        :lvec (subseq (leaf-lvec leaf) 0 nl-split))
+      (make-leaf
+        :str (subseq (leaf-str leaf) i)
+        :lvec (vsub (subseq (leaf-lvec leaf) nl-split) i)))))
+
+
+(defun vsub (vec i)
+  (map 'vector
+    (lambda (e)
+      (- e i))
+    vec))
+
+
+(defun bsearch (seq i &optional (lo 0) hi)
+  (if (null hi) (setf hi (length seq)))
+
+  (let ((mid (+ lo (floor (- hi lo) 2))))
+    (cond
+      ((> lo hi) lo)
+      ((= (elt seq mid) i) mid)
+      ((> (elt seq mid) i) (bsearch seq i lo (- mid 1)))
+      ((< (elt seq mid) i) (bsearch seq i (+ mid 1) hi)))))
 
 
 (defun rope-len (rope)
   "gets the length of the rope"
-  (if (typep rope 'sequence)
-    (length rope)
+  (if (leaf-p rope)
+    (length (leaf-str rope))
     (+
       (rope-nl rope)
       (rope-len (rope-r rope)))))
 
 
+(defun rope-lines (rope)
+  "gets the number of lines in a rope"
+  (if (leaf-p rope)
+    (length (leaf-lvec rope))
+    (+
+      (rope-nnl rope)
+      (rope-lines (rope-r rope)))))
+
+
+(defun empty-leaf-p (rope)
+  (and
+    (leaf-p rope)
+    (= (length (leaf-str rope)) 0)))
+
+
 (defun concat (rope1 rope2)
   "concatenates two ropes"
   (cond
-    ((equal rope1 "") rope2)
-    ((equal rope2 "") rope1)
+    ((empty-leaf-p rope1) rope2)
+    ((empty-leaf-p rope2) rope1)
     (t (make-rope :nl (rope-len rope1)
+                  :nnl (rope-lines rope1)
                   :l rope1
                   :r rope2))))
 
@@ -101,4 +169,4 @@
     (append
       (chunks (rope-l rope))
       (chunks (rope-r rope)))
-    (list rope)))
+    (list (leaf-str rope))))

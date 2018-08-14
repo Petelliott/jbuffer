@@ -28,16 +28,16 @@
       stack)))
 
 
-(defun fname-to-istring (fname)
+(defun fname-to-string (fname)
   (with-open-file (strm fname)
     (let ((contents (make-string (file-length strm))))
       (read-sequence contents strm)
-      (istring:make-istring contents))))
+      contents)))
 
 
 (defun open-buff (fname)
   (make-buffer
-    :stack (fname-to-istring fname)
+    :stack (rope:str-to-rope (fname-to-string fname))
     :redo nil
     :dirty nil
     :fname fname))
@@ -65,7 +65,10 @@
 (defun insert (buff str i)
   (make-buffer
     :stack (cons
-             (rope:insert (buffer-head buff) str i)
+             (rope:insert
+               (buffer-head buff)
+               (rope:str-to-rope str)
+               i)
              (buffer-stack buff))
     :redo nil
     :dirty t
