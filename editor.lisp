@@ -4,7 +4,9 @@
   (:export
     #:open-buff
     #:write-buff
+    #:insert-coord
     #:insert
+    #:del-from-coord
     #:del-from
     #:undo
     #:redo
@@ -62,6 +64,10 @@
     :fname (buffer-fname buff)))
 
 
+(defun insert-coord (buff str lines &optional (cols 0))
+  (insert buff str (rope:coord-to-idx lines cols)))
+
+
 (defun insert (buff str i)
   (make-buffer
     :stack (cons
@@ -73,6 +79,12 @@
     :redo nil
     :dirty t
     :fname (buffer-fname buff)))
+
+
+(defun del-from-coord (buff s-line e-line &optional (s-cols 0) (e-cols 0))
+  (del-from buff
+            (rope:coord-to-idx s-line s-cols)
+            (rope:coord-to-idx e-line e-cols)))
 
 
 (defun del-from (buff start end)
