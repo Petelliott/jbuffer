@@ -1,6 +1,6 @@
-;;;; The definition of the immutable rope data structure
+;;;; immutable rope data structure
 ;;;; author: Peter Elliott
-;;;; licence: MIT
+;;;; licence: LGPL-v3
 
 (defpackage :rope
   (:use :cl)

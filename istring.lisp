@@ -1,5 +1,6 @@
-;;; a library for immutable strings
-;;; author: Peter Elliott
+;;;; immutable strings with O(1) substrings
+;;;; author: Peter Elliott
+;;;; licence: LGPL-v3
 
 (defpackage :istring
   (:use :cl)

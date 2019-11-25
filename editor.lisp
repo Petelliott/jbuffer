@@ -1,3 +1,6 @@
+;;;; editor operations on immutable ropes
+;;;; author: Peter Elliott
+;;;; licence: LGPL-v3
 
 (defpackage :editor
   (:use :cl)
