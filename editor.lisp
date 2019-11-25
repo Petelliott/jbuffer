@@ -2,7 +2,8 @@
 ;;;; author: Peter Elliott
 ;;;; licence: LGPL-v3
 
-(defpackage :editor
+(defpackage :jbuffer-editor
+  (:nicknames jbedit)
   (:use :cl)
   (:export
     #:open-buff
@@ -17,7 +18,7 @@
     #:buffer))
 
 
-(in-package :editor)
+(in-package :jbuffer-editor)
 
 
 (defstruct buffer
@@ -43,7 +44,7 @@
 
 (defun open-buff (fname)
   (make-buffer
-    :stack (rope:str-to-rope (fname-to-string fname))
+    :stack (jbrope:str-to-rope (fname-to-string fname))
     :redo nil
     :dirty nil
     :fname fname))
@@ -59,7 +60,7 @@
     (mapcar
       (lambda (chunk)
         (princ chunk f))
-      (rope:chunks (buffer-head buff))))
+      (jbrope:chunks (buffer-head buff))))
 
   (make-buffer
     :stack (buffer-stack buff)
@@ -69,15 +70,15 @@
 
 
 (defun insert-coord (buff str lines &optional (cols 0))
-  (insert buff str (rope:coord-to-idx lines cols)))
+  (insert buff str (jbrope:coord-to-idx lines cols)))
 
 
 (defun insert (buff str i)
   (make-buffer
     :stack (cons
-             (rope:insert
+             (jbrope:insert
                (buffer-head buff)
-               (rope:str-to-rope str)
+               (jbrope:str-to-rope str)
                i)
              (buffer-stack buff))
     :redo nil
@@ -87,14 +88,14 @@
 
 (defun del-from-coord (buff s-line e-line &optional (s-cols 0) (e-cols 0))
   (del-from buff
-            (rope:coord-to-idx s-line s-cols)
-            (rope:coord-to-idx e-line e-cols)))
+            (jbrope:coord-to-idx s-line s-cols)
+            (jbrope:coord-to-idx e-line e-cols)))
 
 
 (defun del-from (buff start end)
   (make-buffer
     :stack (cons
-             (rope:del-from (buffer-head buff) start end)
+             (jbrope:del-from (buffer-head buff) start end)
              (buffer-stack buff))
     :redo nil
     :dirty t
@@ -102,7 +103,7 @@
 
 
 (defun del-coord-n (buff sline scol n)
-  (let ((i (rope:coord-to-idx sline scol)))
+  (let ((i (jbrope:coord-to-idx sline scol)))
     (if (> n 0)
       (del-from buff i (+ i n))
       (del-from buff (+ i n) i))))

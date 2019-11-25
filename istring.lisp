@@ -2,12 +2,13 @@
 ;;;; author: Peter Elliott
 ;;;; licence: LGPL-v3
 
-(defpackage :istring
+(defpackage :jbuffer-istring
+  (:nicknames jbstring)
   (:use :cl)
   (:export
     #:make-istring))
 
-(in-package :istring)
+(in-package :jbuffer-istring)
 
 
 (defclass istring (sequence standard-object)

@@ -2,7 +2,8 @@
 ;;;; author: Peter Elliott
 ;;;; licence: LGPL-v3
 
-(defpackage :rope
+(defpackage :jbuffer-rope
+  (:nicknames jbrope)
   (:use :cl)
   (:export
     #:str-to-rope
@@ -18,7 +19,7 @@
     #:del-from
     #:chunks))
 
-(in-package :rope)
+(in-package :jbuffer-rope)
 
 
 (defstruct leaf
@@ -48,7 +49,7 @@
 
 (defun str-to-rope (str)
   (make-leaf
-    :str (istring:make-istring str)
+    :str (jbstring:make-istring str)
     :lvec (find-lines str)))
 
 
