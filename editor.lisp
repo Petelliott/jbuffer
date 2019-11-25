@@ -8,6 +8,7 @@
     #:insert
     #:del-from-coord
     #:del-from
+    #:del-coord-n
     #:undo
     #:redo
     #:buffer))
@@ -95,6 +96,13 @@
     :redo nil
     :dirty t
     :fname (buffer-fname buff)))
+
+
+(defun del-coord-n (buff sline scol n)
+  (let ((i (rope:coord-to-idx sline scol)))
+    (if (> n 0)
+      (del-from buff i (+ i n))
+      (del-from buff (+ i n) i))))
 
 
 (defun undo (buff)
